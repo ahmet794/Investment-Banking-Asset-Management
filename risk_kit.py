@@ -154,3 +154,13 @@ def semideviation3(r):
     excess_negative_square = excess_negative**2               # We square the demeaned returns below the mean
     n_negative = (excess<0).sum()                             # number of returns under the mean
     return (excess_negative_square.sum()/n_negative)**0.5     # semideviation
+
+def get_ind_returns():
+    """
+    Load and fromat the Ken French 30 Industry Portfolios Value Weighted Monthly Returns
+    """
+
+    ind = pd.read_csv("data/ind30_m_wm_rets.csv", header=0, index_col=0)/100
+    ind.index = pd.to_datetime(ind.index, format="%Y%m").to_period("M")
+    ind.columns = ind.columns.str.strip()
+    return ind
