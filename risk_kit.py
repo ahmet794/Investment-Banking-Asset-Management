@@ -160,7 +160,36 @@ def get_ind_returns():
     Load and fromat the Ken French 30 Industry Portfolios Value Weighted Monthly Returns
     """
 
-    ind = pd.read_csv("data/ind30_m_wm_rets.csv", header=0, index_col=0)/100
+    ind = pd.read_csv("data/ind30_m_vw_rets.csv", header=0, index_col=0)/100
     ind.index = pd.to_datetime(ind.index, format="%Y%m").to_period("M")
     ind.columns = ind.columns.str.strip()
     return ind
+
+def annualize_rets(r, periods_per_year):
+    """
+    Annualizes a set of returns
+    """
+
+    compounded_growth = (1+r).prod()
+    n_periods = r.shape[0]
+    return compounded_growth**(periods_per_year/n_periods)-1
+
+def annualize_vol(r, periods_per_year):
+    """
+    Annualizes the vol of a set of returns
+    """
+
+    return r.std()*(periods_per_year**0.05)
+
+def sharpe_ratio(r, riskfree_rate, periods_per_year):
+    """
+    Computes the annualized sharpe ratio of a set of returns
+    """
+
+    # convert the annual riskfree rate to per period
+
+    rf_per_period = (1 + riskfree_rate)**(1/periods_per_year)-1
+    excess_ret = r-rf_per_period
+    ann_ex_ret = annualize_rets(excess_ret, periods_per_year)
+    ann_vol = annualize_vol(r, periods_per_year)
+    return ann_ex_ret/ann_vol
