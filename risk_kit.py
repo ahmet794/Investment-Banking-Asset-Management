@@ -215,7 +215,7 @@ def plot_2aef(n_points, er, cov, style):
         raise ValueError("plot_2aef can only plot 2-asset frontiers")
     weights = [np.array([w, 1-w]) for w in np.linspace(0, 1, n_points)]
     rets = [portfolio_return(w, er) for w in weights]
-    vols = [portfolio_vol(w, cov.loc[l, l]) for w in weights]
+    vols = [portfolio_vol(w, cov) for w in weights]
     ef = pd.DataFrame({
         "Returns": rets,
         "Volatility": vols
