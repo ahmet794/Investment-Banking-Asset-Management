@@ -193,3 +193,15 @@ def sharpe_ratio(r, riskfree_rate, periods_per_year):
     ann_ex_ret = annualize_rets(excess_ret, periods_per_year)
     ann_vol = annualize_vol(r, periods_per_year)
     return ann_ex_ret/ann_vol
+
+def portfolio_return(weights, returns):
+    """
+    Weights -> Returns
+    """
+    return weights.T @ returns
+
+def portfolio_vol(weights, covmat):
+    """
+    Weights -> Volatility
+    """
+    return (weights.T @ covmat @ weights)**0.5
