@@ -205,3 +205,19 @@ def portfolio_vol(weights, covmat):
     Weights -> Volatility
     """
     return (weights.T @ covmat @ weights)**0.5
+
+def plot_2aef(n_points, er, cov, style):
+    """
+    Plots the 2-asset efficient frontier
+    """
+
+    if er.shape[0] != 2:
+        raise ValueError("plot_2aef can only plot 2-asset frontiers")
+    weights = [np.array([w, 1-w]) for w in np.linspace(0, 1, n_points)]
+    rets = [portfolio_return(w, er) for w in weights]
+    vols = [portfolio_vol(w, cov.loc[l, l]) for w in weights]
+    ef = pd.DataFrame({
+        "Returns": rets,
+        "Volatility": vols
+    })
+    return ef.plot.line(x = "Volatility", y="Returns", style=style)
