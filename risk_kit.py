@@ -1,6 +1,7 @@
+import numpy as np
 import pandas as pd 
 import scipy
-import scipy.optimize as minimize
+from scipy.optimize import minimize
 def drawdown(return_series: pd.Series):
     """
     Takes a times series of asset returns
@@ -119,7 +120,6 @@ def var_gaussian(r, level = 5, modified = False):
             )
     return -(r.mean() + z*r.std(ddof=0))
 
-import numpy as np
 def var_historic(r, level = 5):
     """
     VaR Historic
@@ -224,26 +224,48 @@ def plot_2aef(n_points, er, cov, style=".-"):
     return ef.plot.line(x = "Volatility", y="Returns", style=style)
 
 def minimize_vol(target_return, er, cov):
+    # Function utilizes optimization techniques to find the weights that minimize portfolio volatility while achieving 
+    # the desired target return. It uses the covariance matrix to consider the 
+    # relationships between different assets when determining the optimal weights.
     """
-    target_ret -> W
+    Returns the optimal weights that achieve the target return
+    given a set of expected returns and a covariance matrix
     """
-
     n = er.shape[0]
     init_guess = np.repeat(1/n, n)
-    bounds = ((0.0, 1.0), )*n
-    return_is_target = {
-        'type': 'eq',
-        'args': (er,),
-        'fun': lambda weights, er: target_return - portfolio_return(weights, er)
+    bounds = ((0.0, 1.0),) * n # an N-tuple of 2-tuples!
+    # construct the constraints
+    weights_sum_to_1 = {'type': 'eq',
+                        'fun': lambda weights: np.sum(weights) - 1
     }
-    weights_sum_to_1 = {
-        'type': 'eq',
-        'fun': lambda weights: np.sum(weights) - 1
+    return_is_target = {'type': 'eq',
+                        'args': (er,),
+                        'fun': lambda weights, er: target_return - portfolio_return(weights,er)
     }
-    results = minimize(portfolio_vol, init_guess,
-                       args=(cov,), method="SLSQP",
+    weights = minimize(portfolio_vol, init_guess,
+                       args=(cov,), method='SLSQP', #Sequential Least Squares Programming optimization algorithm
                        options={'disp': False},
-                       constraints = (return_is_target, weights_sum_to_1),
-                       bounds = bounds
-                       )
-    return results.x
+                       constraints=(weights_sum_to_1,return_is_target),
+                       bounds=bounds)
+    return weights.x
+
+def optimal_weights(n_points, er, cov):
+    """
+    List of weights to run the optimizer on to minimize the vol
+    """
+    target_rs = np.linspace(er.min(), er.max(), n_points)
+    weights = [minimize_vol(target_return, er, cov) for target_return in target_rs]
+    return weights
+
+def plot_ef(n_points, er, cov, style=".-"):
+    """
+    Plots the N-asset efficient frontier
+    """
+    weights = optimal_weights(n_points, er, cov)
+    rets = [portfolio_return(w, er) for w in weights]
+    vols = [portfolio_vol(w, cov) for w in weights]
+    ef = pd.DataFrame({
+        "Returns": rets,
+        "Volatility": vols
+    })
+    return ef.plot.line(x = "Volatility", y="Returns", style=style)
