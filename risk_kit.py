@@ -268,7 +268,7 @@ def plot_ef(n_points, er, cov, style=".-", show_cml = False, riskfree_rate = 0):
         "Returns": rets,
         "Volatility": vols
     })
-    ax = plot_ef(20, er, cov)
+    ax = ef.plot.line(x="Volatility", y="Returns", style = style)
     if show_cml:
         ax.set_xlim(left = 0)
         w_msr = msr(riskfree_rate, er, cov)
@@ -278,7 +278,6 @@ def plot_ef(n_points, er, cov, style=".-", show_cml = False, riskfree_rate = 0):
         cml_x = [0, vol_msr]
         cml_y = [riskfree_rate, r_msr]
         ax.plot(cml_x, cml_y, color = "green", marker="o", linestyle = "dashed")
-
     return ax
 
 def msr(riskfree_rate, er, cov):
