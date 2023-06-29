@@ -257,7 +257,7 @@ def optimal_weights(n_points, er, cov):
     weights = [minimize_vol(target_return, er, cov) for target_return in target_rs]
     return weights
 
-def plot_ef(n_points, er, cov, style=".-", show_cml = False, riskfree_rate = 0):
+def plot_ef(n_points, er, cov, style=".-", show_cml = False, riskfree_rate = 0, show_ew=False):
     """
     Plots the N-asset efficient frontier
     """
@@ -269,6 +269,13 @@ def plot_ef(n_points, er, cov, style=".-", show_cml = False, riskfree_rate = 0):
         "Volatility": vols
     })
     ax = ef.plot.line(x="Volatility", y="Returns", style = style)
+    if show_ew:
+        n = er.shape[0]
+        w_ew = np.repeat(1/n, n)
+        r_ew = portfolio_return(w_ew, er)
+        vol_ew = portfolio_vol(w_ew, cov)
+        # display EW
+        ax.plot([vol_ew], [r_ew], color="goldenrod", marker="o", markersize = 12)
     if show_cml:
         ax.set_xlim(left = 0)
         w_msr = msr(riskfree_rate, er, cov)
