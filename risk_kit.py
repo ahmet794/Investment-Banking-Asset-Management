@@ -166,6 +166,24 @@ def get_ind_returns():
     ind.columns = ind.columns.str.strip()
     return ind
 
+def get_ind_size():
+    """
+    Load the size file for the Ken French 30 Industry Portfolios
+    """
+    ind = pd.read_csv("data/ind30_m_size.csv", header = 0, index_col = 0)
+    ind.index = pd.to_datetime(ind.index, format = "%Y%m").to_period("M")
+    ind.columns = ind.columns.str.strip()
+    return ind
+
+def get_ind_nfirms():
+    """
+    Load the size file for the Ken French 30 Industry Portfolios
+    """
+    ind = pd.read_csv("data/ind30_m_size.csv", header = 0, index_col = 0)
+    ind.index = pd.to_datetime(ind.index, format = "%Y%m").to_period("M")
+    ind.columns = ind.columns.str.strip()
+    return ind
+    
 def annualize_rets(r, periods_per_year):
     """
     Annualizes a set of returns
