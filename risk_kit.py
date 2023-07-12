@@ -345,3 +345,16 @@ def msr(riskfree_rate, er, cov):
                        constraints=(weights_sum_to_1),
                        bounds=bounds)
     return results.x
+
+def get_total_market_index_returns():
+    """
+    Load the 30 industry portfolio data and derive the returns of a capweighted total market index
+    """
+    ind_nfirms = get_ind_nfirms()
+    ind_size = get_ind_size()
+    ind_return = get_ind_returns()
+    ind_mktcap = ind_nfirms * ind_size
+    total_mktcap = ind_mktcap.sum(axis=1)
+    ind_capweight = ind_mktcap.divide(total_mktcap, axis="rows")
+    total_market_return = (ind_capweight * ind_return).sum(axis="columns")
+    return total_market_return
