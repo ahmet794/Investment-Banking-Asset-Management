@@ -408,11 +408,7 @@ def run_ccpi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.0
         "floor": floor,
         "risky_r":risky_r,
         "safe_r": safe_r,
-        "drawdown": drawdown,
-        "peak": peak_history,
-        "floor": floorval_history
     }
 
     return backtest_result
 
-    
