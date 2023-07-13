@@ -359,7 +359,7 @@ def get_total_market_index_returns():
     total_market_return = (ind_capweight * ind_return).sum(axis="columns")
     return total_market_return
 
-def run_ccpi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.03):
+def run_cppi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.03):
     """
     Run a backtest of the CPPI strategy, given a set of returns for the risky asset
     Returns a dictionary containing: Asset Value History, Risk Budget History, Risky Weight History
@@ -434,7 +434,7 @@ def summary_stats(r, riskfree_rate=0.03):
         "Sharpe Ratio": ann_sr,
         "Max Drawdown": dd
     })
-    
+
 
 
 
