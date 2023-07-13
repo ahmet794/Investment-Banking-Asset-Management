@@ -412,3 +412,31 @@ def run_ccpi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.0
 
     return backtest_result
 
+def summary_stats(r, riskfree_rate=0.03):
+    """
+    Return a DataFrame that contains aggregated summary stats for the returns in the columns of r
+    """
+    ann_r = r.aggregate(annualize_rets, periods_per_year=12)
+    ann_vol = r.aggregate(annualize_vol, periods_per_year=12)
+    ann_sr = r.aggregate(sharpe_ratio, riskfree_rate=riskfree_rate, periods_per_year=12)
+    dd = r.aggregate(lambda r: drawdown(r).Drawdown.min())
+    skew = r.aggregate(skewness)
+    kurt = r.aggregate(kurtosis)
+    cf_var5 = r.aggregate(var_gaussian, modified=True)
+    hist_cvar5 = r.aggregate(cvar_historic)
+    return pd.DataFrame({
+        "Annualized Return": ann_r,
+        "Annualized Vol": ann_vol,
+        "Skewness": skew,
+        "Kurtosis": kurt,
+        "Cornish-Fisher VaR (5%)": cf_var5,
+        "Historic CVaR (5%)": hist_cvar5,
+        "Sharpe Ratio": ann_sr,
+        "Max Drawdown": dd
+    })
+    
+
+
+
+
+
