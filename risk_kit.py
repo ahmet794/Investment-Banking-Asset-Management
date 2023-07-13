@@ -359,7 +359,7 @@ def get_total_market_index_returns():
     total_market_return = (ind_capweight * ind_return).sum(axis="columns")
     return total_market_return
 
-def run_cppi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.03):
+def run_cppi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.03, drawdown=None):
     """
     Run a backtest of the CPPI strategy, given a set of returns for the risky asset
     Returns a dictionary containing: Asset Value History, Risk Budget History, Risky Weight History
@@ -369,6 +369,7 @@ def run_cppi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.0
     n_steps = len(dates)
     account_value = start
     floor_value = start*floor
+    peak = start
 
     if isinstance(risky_r, pd.Series):
         risky_r = pd.DataFrame(risky_r, columns=["R"])
@@ -380,8 +381,13 @@ def run_cppi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.0
     account_history = pd.DataFrame().reindex_like(risky_r)
     cushion_history = pd.DataFrame().reindex_like(risky_r)
     risky_w_history = pd.DataFrame().reindex_like(risky_r)
+    floorval_history = pd.DataFrame().reindex_like(risky_r)
+    peak_history = pd.DataFrame().reindex_like(risky_r)
 
     for step in range(n_steps):
+        if drawdown is not None:
+            peak = np.maximum(peak, account_value)
+            floor_value = peak*(1-drawdown)
         cushion = (account_value - floor_value)/account_value
         risky_w = m*cushion
         risky_w = np.minimum(risky_w, 1)
@@ -395,6 +401,8 @@ def run_cppi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.0
         cushion_history.iloc[step] = cushion
         risky_w_history.iloc[step] = risky_w
         account_history.iloc[step] = account_value
+        peak_history.iloc[step] = peak
+        floorval_history.iloc[step] = floor_value
 
     risky_wealth = start*(1+risky_r).cumprod()
 
@@ -408,6 +416,9 @@ def run_cppi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.0
         "floor": floor,
         "risky_r":risky_r,
         "safe_r": safe_r,
+        "drawdown": drawdown,
+        "peak": peak_history,
+        "floor": floorval_history
     }
 
     return backtest_result
