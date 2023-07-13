@@ -358,3 +358,61 @@ def get_total_market_index_returns():
     ind_capweight = ind_mktcap.divide(total_mktcap, axis="rows")
     total_market_return = (ind_capweight * ind_return).sum(axis="columns")
     return total_market_return
+
+def run_ccpi(risky_r, safe_r=None, m=3, start=1000, floor=0.8, riskfree_rate=0.03):
+    """
+    Run a backtest of the CPPI strategy, given a set of returns for the risky asset
+    Returns a dictionary containing: Asset Value History, Risk Budget History, Risky Weight History
+    """
+    # set up the CPPI parameters
+    dates = risky_r.index
+    n_steps = len(dates)
+    account_value = start
+    floor_value = start*floor
+
+    if isinstance(risky_r, pd.Series):
+        risky_r = pd.DataFrame(risky_r, columns=["R"])
+
+    if safe_r is None:
+        safe_r = pd.DataFrame().reindex_like(risky_r)
+        safe_r.values[:] = riskfree_rate/12 #fast way to set all values to a number
+    # set up some DataFrames for saving intermediate values
+    account_history = pd.DataFrame().reindex_like(risky_r)
+    cushion_history = pd.DataFrame().reindex_like(risky_r)
+    risky_w_history = pd.DataFrame().reindex_like(risky_r)
+
+    for step in range(n_steps):
+        cushion = (account_value - floor_value)/account_value
+        risky_w = m*cushion
+        risky_w = np.minimum(risky_w, 1)
+        risky_w = np.maximum(risky_w, 0)
+        safe_w = 1-risky_w
+        risky_alloc = account_value*risky_w
+        safe_alloc = account_value*safe_w
+        ## update the account value for this time step
+        account_value = risky_alloc*(1+risky_r.iloc[step]) + safe_alloc*(1+safe_r.iloc[step])
+        # save the values so I can look at the history and plot it etc
+        cushion_history.iloc[step] = cushion
+        risky_w_history.iloc[step] = risky_w
+        account_history.iloc[step] = account_value
+
+    risky_wealth = start*(1+risky_r).cumprod()
+
+    backtest_result = {
+        "Wealth": account_history,
+        "Risky Wealth": risky_wealth, 
+        "Risk Budget": cushion_history,
+        "Risky Allocation": risky_w_history,
+        "m": m,
+        "start": start,
+        "floor": floor,
+        "risky_r":risky_r,
+        "safe_r": safe_r,
+        "drawdown": drawdown,
+        "peak": peak_history,
+        "floor": floorval_history
+    }
+
+    return backtest_result
+
+    
