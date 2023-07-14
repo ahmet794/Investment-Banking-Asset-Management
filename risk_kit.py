@@ -448,6 +448,17 @@ def summary_stats(r, riskfree_rate=0.03):
 
 
 
-
+def gbm(n_years=10, n_scenarios=1000, mu=0.07, sigma=0.15, steps_per_year=12, s_0=100.0):
+    """
+    Evolution of a Stock Price using a Geometric Brownian Motion Model
+    """
+    dt = 1/steps_per_year
+    n_steps = int(n_years*steps_per_year)
+    xi = np.random.normal(size=(n,n_steps, n_scenarios))
+    rets = mu*dt + sigma*np.sqrt(dt)*xi
+    rets = pd.DataFrame(rets)
+    # to prices
+    prices = s_0*(1+rets).cumprod()
+    return prices
 
 
