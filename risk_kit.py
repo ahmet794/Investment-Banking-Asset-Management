@@ -529,7 +529,6 @@ cppi_controls = widgets.interactive(show_cppi,
                                    y_max=widgets.IntSlider(min=0, max=100, step=1, value=100,
                                                           description="Zoom Y Axis")
 )
-display(cppi_controls)
 
 
 
