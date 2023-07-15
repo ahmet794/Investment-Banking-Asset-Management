@@ -530,5 +530,30 @@ cppi_controls = widgets.interactive(show_cppi,
                                                           description="Zoom Y Axis")
 )
 
+def discount(t, r):
+    """
+    Compute the price of a pure discount bond that pays a dollar at a time t given interest rate r
+    """
+    return (1+r)**(-t)
 
+def pv(l ,r):
+    """
+    Computes the peresent value of a sequence of liabilities
+    l is indexed by the time and the values are the amounts of each liability
+    returns the peresent value of the sequence
+    """
+
+    dates = l.index
+    discounts = discount(dates, r)
+    return (discounts*l).sum()
+
+def funding_ratio(asset_value, liabilities, r):
+    """
+    Computes the funding ratio of some assets given liabilities and interest rate
+    """
+    return asset_value/pv(liabilities, r)
+
+def show_funding_ratio(assets, liabilities, r):
+    fr = funding_ratio(assets, liabilities, r)
+    print(f'{fr*100:.2f}')
 
