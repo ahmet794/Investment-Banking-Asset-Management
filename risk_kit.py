@@ -557,3 +557,35 @@ def show_funding_ratio(assets, liabilities, r):
     fr = funding_ratio(assets, liabilities, r)
     print(f'{fr*100:.2f}')
 
+def inst_to_ann(r):
+    """
+    Converts short rate to an annualized rate
+    """
+    return np.expm1(r)
+
+def ann_to_inst(r):
+    """
+    Covert annualized to a short rate
+    """
+    return np.log1p(r)
+
+def cir(n_years = 10, n_scenarios = 1, a=0.05, b=0.03, sigma=0.05, steps_per_year=12, r_0=None):
+    """
+    Implements the CIR model for interest rates
+    """
+
+    if r_0 is None: r_0 = b
+    r_0 = ann_to_inst(r_0)
+    dt = 1/steps_per_year
+
+    num_steps = int(n_years*steps_per_year)+1
+    shock = np.random.normal(0, scale=np.sqrt(dt), size=(num_steps, n_scenarios))
+    rates = np.empty_like(shock)
+    rates[0] = r_0
+    for step in range(1, num_steps):
+        r_t = rates[step-1]
+        d_r_t = a*(b-r_t)*dt + sigma*np.sqrt(r_t)*shock[step]
+        rates[step] = abs(r_t + d_r_t)
+
+    return pd.DataFrame(data=inst_to_ann(rates), index=range(num_steps))
+
