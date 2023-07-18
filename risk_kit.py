@@ -535,11 +535,11 @@ def pv(l ,r):
     discounts = discount(dates, r)
     return (discounts*l).sum()
 
-def funding_ratio(asset_value, liabilities, r):
+def funding_ratio(assets, liabilities, r):
     """
-    Computes the funding ratio of some assets given liabilities and interest rate
+    Computes the funding ratio of a series of liabilities, based on an interest rate and current value of assets
     """
-    return asset_value/pv(liabilities, r)
+    return pv(assets, r)/pv(liabilities, r)
 
 def show_funding_ratio(assets, liabilities, r):
     fr = funding_ratio(assets, liabilities, r)
@@ -609,3 +609,14 @@ def macaulay_duration(flows, discount_rate):
     discounted_flows = discount(flows.index, discount_rate)*flows
     weights = discounted_flows/discounted_flows.sum()
     return np.average(flows.index, weights=weights)
+
+def match_durations(cf_t, cf_s, cf_l, discount_rate):
+    """
+    Returns the weight W in cf_s that, along with (1-W) in cf_l will have an effective
+    duration that matches cf_t
+    """
+    d_t = macaulay_duration(cf_t, discount_rate)
+    d_s = macaulay_duration(cf_s, discount_rate)
+    d_l = macaulay_duration(cf_l, discount_rate)
+    return (d_l - d_t)/(d_l - d_s)
+
