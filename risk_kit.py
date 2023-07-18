@@ -601,3 +601,11 @@ def bond_price(maturity, principal=100, coupon_rate=0.03, coupons_per_year=12, d
     """
     cash_flows = bond_cash_flows(maturity, principal, coupon_rate, coupons_per_year)
     return pv(cash_flows, discount_rate/coupons_per_year)
+
+def macaulay_duration(flows, discount_rate):
+    """
+    Computes the Macaulay Duration of a sequence of cash flows, given a per-period discount rate
+    """
+    discounted_flows = discount(flows.index, discount_rate)*flows
+    weights = discounted_flows/discounted_flows.sum()
+    return np.average(flows.index, weights=weights)
