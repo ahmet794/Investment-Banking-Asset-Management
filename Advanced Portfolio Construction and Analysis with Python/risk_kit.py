@@ -626,3 +626,12 @@ def compound(r):
     """
 
     return np.expm1(np.log1p(r).sum())
+
+def get_fff_returns():
+    """
+    Load the Fama-French Research Factor Monthly Dataset
+    """
+    rets = pd.read_csv("data/F-F_Research_Data_Factors_m.csv",
+                       header=0, index_col=0, na_values=-99.99)/100
+    rets.index = pd.to_datetime(rets.index, format="%Y%m").to_period('M')
+    return rets
