@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd 
 import scipy
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
 from scipy.optimize import minimize
 from IPython.display import display
 
@@ -635,3 +636,20 @@ def get_fff_returns():
                        header=0, index_col=0, na_values=-99.99)/100
     rets.index = pd.to_datetime(rets.index, format="%Y%m").to_period('M')
     return rets
+
+def regress(dependent_variable, explanatory_variables, alpha=True):
+    """
+    Runs a linear regression to decompose the dependent variable into the explanatory variables
+    
+    returns an object of type statsmodel's RegressionResults on which you can call
+        .summary()
+        .params for the coefficents
+        .tvalues and .pvalues for the significance levels
+        .rsquared_adj and .rsquared for quality of fit
+    """
+
+    if alpha: 
+        explanatory_variables = explanatory_variables.copy()
+        explanatory_variables['Alpha'] = 1
+    lm = sm.OLS(dependent_variable, explanatory_variables).fit()
+    return lm
