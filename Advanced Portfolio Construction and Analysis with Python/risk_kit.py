@@ -162,15 +162,34 @@ def semideviation3(r):
     n_negative = (excess<0).sum()                             # number of returns under the mean
     return (excess_negative_square.sum()/n_negative)**0.5     # semideviation
 
-def get_ind_returns():
+def get_ind_file(filetype, ew=False):
+    """
+    Load and format the Ken French 30 Industry Portfolios files
+    """
+    known_types = ["returns", "nfirms", "size"]
+    if filetype not in known_types:
+        raise ValueError(f"filetype must be one of:{','.join(known_types)}")
+    if filetype is "returns":
+        name = "ew_rets" if ew else "vw_rets"
+        divisor = 100
+    elif filetype is "nfirms":
+        name = "nfirms"
+        divisor = 1
+    elif filetype is "size":
+        name = "size"
+        divisor = 1
+                         
+    ind = pd.read_csv(f"data/ind30_m_{name}.csv", header=0, index_col=0)/divisor
+    ind.index = pd.to_datetime(ind.index, format="%Y%m").to_period('M')
+    ind.columns = ind.columns.str.strip()
+    return ind
+
+def get_ind_returns(ew = False):
     """
     Load and fromat the Ken French 30 Industry Portfolios Value Weighted Monthly Returns
     """
 
-    ind = pd.read_csv("data/ind30_m_vw_rets.csv", header=0, index_col=0)/100
-    ind.index = pd.to_datetime(ind.index, format="%Y%m").to_period("M")
-    ind.columns = ind.columns.str.strip()
-    return ind
+    return get_ind_file("returns", ew=ew)
 
 def get_ind_size():
     """
