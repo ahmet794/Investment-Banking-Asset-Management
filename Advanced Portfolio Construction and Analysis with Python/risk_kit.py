@@ -722,14 +722,21 @@ def tracking_error(r_a, r_b):
 
     return np.sqrt(((r_a - r_b)**2).sum())
 
-def weight_ew(r):
+def weight_ew(r, **kwargs):
     """
     Returns the weights of the EW portfolio based on the asset returns "r" as a DataFrame
     """
     n = len(r.columns)
     return pd.Series(1/n, index=r.columns)
 
-def backtest_ws(r, estimation_window=60, weighting=weight_ew):
+def weight_cw(r, cap_weights, **kwargs):
+    """
+    Returns the weights of the CW portfolio based on the time series of capweights
+    """
+    return cap_weights.loc[r.index[1]]
+
+
+def backtest_ws(r, estimation_window=60, weighting=weight_ew, **kwargs):
     """
     Backtests a given weighting scheme, given some parameters:
     r : asset returns to use to build the portfolio
@@ -737,11 +744,10 @@ def backtest_ws(r, estimation_window=60, weighting=weight_ew):
     weighting: the weighting scheme to use, must be a function that takes "r", and a variable number of keyword-value arguments
     """
     n_periods = r.shape[0]
+    # return windows
     windows = [(start, start+estimation_window) for start in range(n_periods-estimation_window+1)]
-    # windows is a list of tuples which gives us the (integer) location of the start and stop (non inclusive)
-    # for each estimation window
-    weights = [weighting(r.iloc[win[0]:win[1]]) for win in windows]
-    # List -> DataFrame
+    weights = [weighting(r.iloc[win[0]:win[1]], **kwargs) for win in windows]
+    # convert list of weights to DataFrame
     weights = pd.DataFrame(weights, index=r.iloc[estimation_window-1:].index, columns=r.columns)
     # return weights
     returns = (weights * r).sum(axis="columns",  min_count=1) #mincount is to generate NAs if all inputs are NAs
