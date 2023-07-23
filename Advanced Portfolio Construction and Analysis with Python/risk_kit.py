@@ -162,15 +162,16 @@ def semideviation3(r):
     n_negative = (excess<0).sum()                             # number of returns under the mean
     return (excess_negative_square.sum()/n_negative)**0.5     # semideviation
 
-def get_ind_file(filetype, ew=False):
+def get_ind_file(filetype, weighting="vw", n_inds = 30):
     """
-    Load and format the Ken French 30 Industry Portfolios files
+    Load and format the Ken French Industry Portfolios files
+    Variant is a tuple of (weighting, size) where:
+        weighting is one of "ew", "vw"
+        number of inds is 30 or 49
     """
-    known_types = ["returns", "nfirms", "size"]
-    if filetype not in known_types:
-        raise ValueError(f"filetype must be one of:{','.join(known_types)}")
+
     if filetype is "returns":
-        name = "ew_rets" if ew else "vw_rets"
+        name = f"{weighting}_rets"
         divisor = 100
     elif filetype is "nfirms":
         name = "nfirms"
@@ -178,36 +179,47 @@ def get_ind_file(filetype, ew=False):
     elif filetype is "size":
         name = "size"
         divisor = 1
+    else:
+        raise ValueError(f"filetype must be: returns, nfirms, size")
                          
-    ind = pd.read_csv(f"data/ind30_m_{name}.csv", header=0, index_col=0)/divisor
+    ind = pd.read_csv(f"data/ind{n_inds}_m_{name}.csv", header=0, index_col=0, na_values = -99.99)/divisor
     ind.index = pd.to_datetime(ind.index, format="%Y%m").to_period('M')
     ind.columns = ind.columns.str.strip()
     return ind
 
-def get_ind_returns(ew = False):
+def get_ind_market_caps(n_inds = 30, weights = False):
     """
-    Load and fromat the Ken French 30 Industry Portfolios Value Weighted Monthly Returns
+    Load the industry portfolio data and derive the market caps
+    """
+    ind_nfirms = get_ind_nfirms(n_inds=n_inds)
+    ind_size = get_ind_size(n_inds=n_inds)
+    ind_mktcap = ind_nfirms * ind_size
+
+    if weights:
+        total_mktcap = ind_mktcap.sum(axis=1)
+        ind_capweight = ind_mktcap.divide(total_mktcap, axis="rows")
+        return ind_capweight
+    
+    return ind_mktcap
+
+def get_ind_returns(weighting = "vw", n_inds = 30):
+    """
+    Load and fromat the Ken French 30  or 49 Industry Portfolios Value Weighted Monthly Returns
     """
 
-    return get_ind_file("returns", ew=ew)
+    return get_ind_file("returns", weighting = weighting, n_inds = n_inds)
 
-def get_ind_size():
+def get_ind_size(n_inds = 30):
     """
     Load the size file for the Ken French 30 Industry Portfolios
     """
-    ind = pd.read_csv("data/ind30_m_size.csv", header = 0, index_col = 0)
-    ind.index = pd.to_datetime(ind.index, format = "%Y%m").to_period("M")
-    ind.columns = ind.columns.str.strip()
-    return ind
+    return get_ind_file("size", n_inds=n_inds)
 
-def get_ind_nfirms():
+def get_ind_nfirms(n_inds = 30):
     """
     Load the size file for the Ken French 30 Industry Portfolios
     """
-    ind = pd.read_csv("data/ind30_m_nfirms.csv", header = 0, index_col = 0)
-    ind.index = pd.to_datetime(ind.index, format = "%Y%m").to_period("M")
-    ind.columns = ind.columns.str.strip()
-    return ind
+    return get_ind_file("nfirms", n_inds=n_inds)
     
 def annualize_rets(r, periods_per_year):
     """
