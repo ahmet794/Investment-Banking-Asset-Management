@@ -722,18 +722,32 @@ def tracking_error(r_a, r_b):
 
     return np.sqrt(((r_a - r_b)**2).sum())
 
-def weight_ew(r, **kwargs):
+def weight_ew(r, cap_weights=None, max_cw_mult=None, microcap_threshold=None, **kwargs):
     """
     Returns the weights of the EW portfolio based on the asset returns "r" as a DataFrame
+    If supplied a set of capweights and a capweight tether, it is applied and reweighted 
     """
     n = len(r.columns)
-    return pd.Series(1/n, index=r.columns)
+    ew = pd.Series(1/n, index=r.columns)
+    if cap_weights is not None:
+        cw = cap_weights.loc[r.index[0]] # starting cap weight
+        ## exclude microcaps
+        if microcap_threshold is not None and microcap_threshold > 0:
+            microcap = cw < microcap_threshold
+            ew[microcap] = 0
+            ew = ew/ew.sum()
+        #limit weight to a multiple of capweight
+        if max_cw_mult is not None and max_cw_mult > 0:
+            ew = np.minimum(ew, cw*max_cw_mult)
+            ew = ew/ew.sum() #reweight
+    return ew
 
 def weight_cw(r, cap_weights, **kwargs):
     """
     Returns the weights of the CW portfolio based on the time series of capweights
     """
-    return cap_weights.loc[r.index[1]]
+    w = cap_weights.loc[r.index[1]]
+    return w/w.sum()
 
 
 def backtest_ws(r, estimation_window=60, weighting=weight_ew, **kwargs):
@@ -747,8 +761,7 @@ def backtest_ws(r, estimation_window=60, weighting=weight_ew, **kwargs):
     # return windows
     windows = [(start, start+estimation_window) for start in range(n_periods-estimation_window+1)]
     weights = [weighting(r.iloc[win[0]:win[1]], **kwargs) for win in windows]
-    # convert list of weights to DataFrame
+    # convert to DataFrame
     weights = pd.DataFrame(weights, index=r.iloc[estimation_window-1:].index, columns=r.columns)
-    # return weights
     returns = (weights * r).sum(axis="columns",  min_count=1) #mincount is to generate NAs if all inputs are NAs
     return returns
