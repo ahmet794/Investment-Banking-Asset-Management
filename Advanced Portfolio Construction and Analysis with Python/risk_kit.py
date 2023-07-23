@@ -721,3 +721,28 @@ def tracking_error(r_a, r_b):
     """
 
     return np.sqrt(((r_a - r_b)**2).sum())
+
+def weight_ew(r):
+    """
+    Returns the weights of the EW portfolio based on the asset returns "r" as a DataFrame
+    """
+    n = len(r.columns)
+    return pd.Series(1/n, index=r.columns)
+
+def backtest_ws(r, estimation_window=60, weighting=weight_ew):
+    """
+    Backtests a given weighting scheme, given some parameters:
+    r : asset returns to use to build the portfolio
+    estimation_window: the window to use to estimate parameters
+    weighting: the weighting scheme to use, must be a function that takes "r", and a variable number of keyword-value arguments
+    """
+    n_periods = r.shape[0]
+    windows = [(start, start+estimation_window) for start in range(n_periods-estimation_window+1)]
+    # windows is a list of tuples which gives us the (integer) location of the start and stop (non inclusive)
+    # for each estimation window
+    weights = [weighting(r.iloc[win[0]:win[1]]) for win in windows]
+    # List -> DataFrame
+    weights = pd.DataFrame(weights, index=r.iloc[estimation_window-1:].index, columns=r.columns)
+    # return weights
+    returns = (weights * r).sum(axis="columns",  min_count=1) #mincount is to generate NAs if all inputs are NAs
+    return returns
