@@ -653,3 +653,40 @@ def regress(dependent_variable, explanatory_variables, alpha=True):
         explanatory_variables['Alpha'] = 1
     lm = sm.OLS(dependent_variable, explanatory_variables).fit()
     return lm
+
+def style_analysis(dependant_variable, explanatory_variables):
+    """
+    Returns the optimal weights that minimizes the Tacking error between a 
+    portfolio of the explanatory variables and the dependent variable
+    """
+
+    n = explanatory_variables.shape[1]
+    init_guess = np.repeat(1/n, n)
+    bounds = ((0.0, 1.0),) * n # N-tuple of 2-tuples!
+    # construct the constraint
+    weights_sum_to_1 = {'type': 'eq',
+                        'fun': lambda weights: np.sum(weights) - 1} #ensures that the portfolio's allocation to different assets is 
+                        # fully invested (100%) so that all the available funds are allocated and no cash is left uninvested.
+                    
+    solution = minimize(portfolio_tracking_error, init_guess,
+                        args = (dependant_variable, explanatory_variables, ), method = 'SLSQP',
+                        options = {'disp': False},
+                        constraints = (weights_sum_to_1,),
+                        bounds = bounds)
+    weights = pd.Series(solution.x, index = explanatory_variables.columns)
+    return weights
+
+def portfolio_tracking_error(weights, ref_r, bb_r):
+    """
+    Returns the tracking error between the reference returns and a 
+    portfolio of building block returns held with given weights
+    """
+
+    return tracking_error(ref_r, (weights*bb_r).sum(axis=1))
+
+def tracking_error(r_a, r_b):
+    """
+    Returns the Tracking Error between the two return series
+    """
+
+    return np.sqrt(((r_a - r_b)**2).sum())
