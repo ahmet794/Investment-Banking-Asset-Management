@@ -794,3 +794,13 @@ def cc_cov(r, **kwargs):
     ccov = ccor * np.outer(sd, sd)
     return pd.DataFrame(ccov, index = r.columns, columns = r.columns)
 
+def shrinkage_cov(r, delta = 0.5, **kwargs):
+    """
+    Covariance estimator that shrinks between the Sample Covariance and the Constant Correlation Estimator
+    """
+    prior = cc_cov(r, **kwargs)
+    sample = sample_cov(r, **kwargs)
+    return delta * prior + (1 - delta) * sample
+
+
+
