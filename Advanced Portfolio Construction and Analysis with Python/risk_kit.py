@@ -779,4 +779,18 @@ def weight_gmv(r, cov_estimator=sample_cov, **kwargs):
     est_cov = cov_estimator(r,**kwargs)
     return gmv(est_cov)
 
+def cc_cov(r, **kwargs):
+    """
+    Estimates a covariance matrix by using the Elton/Gruber Constant Correlation model
+    """
+
+    rhos = r.corr()
+    n = rhos.shape[0]
+    # this a symmetric matrix with diagonals all 1
+    rho_bar = (rhos.values.sum()-n)/(n*(n-1)) # is the mean correlation
+    ccor = np.full_like(rhos, rho_bar)
+    np.fill_diagonal(ccor, 1.)
+    sd = r.std()
+    ccov = ccor * np.outer(sd, sd)
+    return pd.DataFrame(ccov, index = r.columns, columns = r.columns)
 
