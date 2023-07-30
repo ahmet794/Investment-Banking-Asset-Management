@@ -765,3 +765,18 @@ def backtest_ws(r, estimation_window=60, weighting=weight_ew, **kwargs):
     weights = pd.DataFrame(weights, index=r.iloc[estimation_window-1:].index, columns=r.columns)
     returns = (weights * r).sum(axis="columns",  min_count=1) #mincount is to generate NAs if all inputs are NAs
     return returns
+
+def sample_cov(r, **kwargs):
+    """
+    Returns the sample covariance of the supplied returns
+    """
+    return r.cov()
+
+def weight_gmv(r, cov_estimator=sample_cov, **kwargs):
+    """
+    Returns the weights of the GMV portfolio given a covariance matrix of the returns
+    """
+    est_cov = cov_estimator(r,**kwargs)
+    return gmv(est_cov)
+
+
