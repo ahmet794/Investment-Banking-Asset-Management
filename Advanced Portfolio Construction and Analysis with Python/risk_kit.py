@@ -723,3 +723,17 @@ def implied_returns(delta, sigma, w):
     # dot is the matrix multiplication
     ir.name = 'Implied Returns'
     return ir
+
+def proportional_prior(sigma, tau, p):
+    """
+    Returns the He-Litterman simplified Omega
+    Inputs:
+    sigma: N x N Cov matrix as a DataFrame
+    tau: a scalar
+    p:a K x N DataFrame linking Q and Assets
+    returns a P x P DataFrame, a Matrix representing Prior Uncertainties
+    """
+
+    helit_omega = p.dot(tau*sigma).dot(p.T)
+    # Make a diag matrix from the diag elements of Omega
+    return pd.DataFrame(np.diag(np.diag(helit_omega.values)), index = p.index, columns = p.index), 
