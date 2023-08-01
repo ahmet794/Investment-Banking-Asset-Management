@@ -708,3 +708,18 @@ def weight_erc(r, cov_estimator=sample_cov, **kwargs):
     """
     est_cov = cov_estimator(r, **kwargs)
     return equal_risk_contributions(est_cov)
+
+def implied_returns(delta, sigma, w):
+    """
+    Obtain the implied expected return by reverse engineering the weights
+    Inputs:
+    delta: Risk Aversion Coefficient (scalar)
+    sigma: Variance - Covariance Matrix (N x N) as DataFrame
+    w: Portfolio weights (N x 1) as Series
+    Returns an N x 1 vector of returns as Series
+    """
+
+    ir = delta * sigma.dot(w).squeeze() # to get a series from a 1 column dataframe
+    # dot is the matrix multiplication
+    ir.name = 'Implied Returns'
+    return ir
